@@ -4,7 +4,106 @@
 ?>
 
 <div>
-    Hola    
+    <div class='titulo-container'>
+        <h1 class='titulo' data-text='Inserte los puntuajes'>Inserte los puntuajes</h1>
+    </div>  
+    <div className='input-container'>
+      <form action="index.php" class="login" method="POST" enctype="multipart/form-data">
+        <div>
+          <input 
+            type='file' 
+            id='file1'
+            name='file1'
+            class='inputfile'
+          />
+          <label for='file1' class='labelInputFile'><i class="fas fa-file-upload"></i> <span>Seleccionar archivo</span></label>
+          </div>
+          <!-- <span id='nameFileSpan'></span> -->
+          <div class="boton">
+            <input type="submit" name="submit" class="button" value="Comprobar ganador">
+          </div>
+        </div>
+
+      </form>
+      <?php 
+        function isInteger($input){
+          //funcion validar numeros integer          
+          if(is_numeric(strval($input)) == 1) {
+            if (is_integer(intval($input)) == 1) {
+              return 1;
+            }
+              return 0;
+          }
+          return 0;
+        }
+        if(isset($_POST['submit'])):
+          // Validacion de Fichero 
+          $errorFichero = '';
+
+          // variable con los resultados
+          $resultados = [];
+          // Leemos el fichero y validamos la información
+          $lines = explode( PHP_EOL,file_get_contents($_FILES['file1'][tmp_name]));
+          foreach($lines as $line ) {
+            $numLineas = explode(" ", $line);
+            if ( count($numLineas) == 1) {
+              // si el primer dato es un numero entero
+              $comprobar = isInteger($line);
+              if ($comprobar == 0 ) {
+                $errorFichero = "No es numero, la cantidad de jugadas: $line";
+                break;
+              } else {
+                if(count($lines) - 1 != intval($line)){
+                  $errorFichero = "No es el numero de la cantidad de jugadas: $line";
+                  break;
+                }
+              }
+
+            } else {
+              // las tiradas con los puntuajes
+
+              $comprobarTirada1 = isInteger($numLineas[0]);
+              $comprobarTirada2 = isInteger($numLineas[1]);
+              if ( $comprobarTirada1 == 1 && $comprobarTirada2 == 1 ) {
+                $ventaja = $numLineas[0] - $numLineas[1];
+                $ganadorJugada = 0;
+
+                if ($ventaja > 0) {
+                  $ganadorJugada = 1;
+                } else if ($ventaja <0) {
+                  $ganadorJugada = 2;
+                  $ventaja = $ventaja * -1;
+                } 
+                if (!$ganadorJugada == 0) {
+                  if (empty($resultados)) {
+                    // si todavia no hay ganador
+                    array_push($resultados, $ganadorJugada, $ventaja);
+                  } else {
+                    // comprobar ventaja 
+                    if ($ventaja >  $resultados[1]){
+                      $resultados = [$ganadorJugada, $ventaja];
+                    }
+                  }
+                }
+                
+              } else {
+                $errorFichero = "No es numero la puntuacion de jugadas: $numLineas[0] - $numLineas[1]";
+                break;
+              }
+            }
+          }
+
+          if ($errorFichero == '') {
+            // el resultado del juego
+            echo "<p>$resultados[0] - $resultados[1]</p>";
+            echo $errorFichero;
+          } else {
+            echo "<p>fichero $errorFichero</p>";
+          }
+          
+        endif;
+        
+      ?>
 </div>
 
 <?php include 'includes/layout/footer.php'; ?>
