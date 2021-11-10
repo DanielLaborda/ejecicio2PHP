@@ -1,3 +1,4 @@
+
 <?php
 	function isInteger($input){
 		//funcion validar numeros integer          
@@ -79,8 +80,11 @@
 			echo "$resultados[0] $resultados[1]";
 
 		 } else {
-		   echo "<p>fichero $errorFichero</p>";
-		 }
+			echo'<script type="text/javascript">
+			alert("'.$errorFichero.'");
+			window.location.href="../../index.php";
+			</script>';
+		}
 	endif;
 		
   
