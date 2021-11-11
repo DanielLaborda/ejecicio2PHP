@@ -18,6 +18,7 @@
 		$marcadores = [];
 		// Leemos el fichero y validamos la información
 		$lines = explode( PHP_EOL,file_get_contents($_FILES['file1'][tmp_name]));
+		$ronda = 0;
 		foreach($lines as $line ) {
 		    $numLineas = explode(" ", $line);
 		    if ( count($numLineas) == 1) {
@@ -37,17 +38,38 @@
 				$comprobarTirada1 = isInteger($numLineas[0]);
 				$comprobarTirada2 = isInteger($numLineas[1]);
 				if ( $comprobarTirada1 == 1 && $comprobarTirada2 == 1 ) {
-					$ventaja = $numLineas[0] - $numLineas[1];
-					$ganadorJugada = 0;
-
-					if ($ventaja > 0) {
-						$ganadorJugada = 1;
-					} else if ($ventaja <0) {
-						$ganadorJugada = 2;
-						$ventaja = $ventaja * -1;
-					} 
-					if (!$ganadorJugada == 0) {
-						array_push($marcadores, [$ganadorJugada, $ventaja]);
+					//debemos sumar las puntuaciones y ver quien va ganando
+					$ronda= $ronda + 1;
+					if(empty($marcadores)){
+						// primera ronda
+						$ventaja = $numLineas[0] - $numLineas[1];
+						$lider = 0;
+					 	if ($ventaja > 0) {
+						 	$lider = 1;
+						} else if ($ventaja <0) {
+							$lider = 2;
+							$ventaja = $ventaja * -1;
+						} 
+						array_push($marcadores, [$ronda, $numLineas[0], $numLineas[1],  $lider, $ventaja]);
+			   			
+					} else {
+						//siguentes rondas
+						$rondaAnterior = end($marcadores);
+						$puntuacionPj1 = $rondaAnterior[1] + $numLineas[0];
+						$puntuacionPj2 = $rondaAnterior[2] + $numLineas[1];
+						$liderRonda = 0;
+						if($puntuacionPj1 > $puntuacionPj2){
+							$liderRonda = 1;
+						}else if($puntuacionPj1 < $puntuacionPj2) {
+							$liderRonda = 2;
+						}
+						// calculamos ventaja
+						$ventaja = $puntuacionPj1 - $puntuacionPj2;
+						if($ventaja < 0) {
+							$ventaja = $ventaja * -1;
+						}
+						// añadimos todos las rondas
+						array_push($marcadores, [$ronda, $puntuacionPj1, $puntuacionPj2, $liderRonda, $ventaja]);	
 					}
 			    } else {
 			   $errorFichero = "No es numero la puntuacion de jugadas: $numLineas[0] - $numLineas[1]";
@@ -55,20 +77,16 @@
 			}
 		   }
 		}
-		
-		// Recorremos los marcadores para saber los resultados
-		$resultados = '';
-		foreach($marcadores as $marcador) {
-			if(empty($resultados)){
-				$resultados= "$marcador[0] $marcador[1]";
+		$ganador = [];
+		foreach ($marcadores as $marcador) {
+			if(empty($ganador)){
+				$ganador = [$marcador[3], $marcador[4]];
 			} else {
-				$porciones = explode(" ", $resultados);
-				if($marcador[1] > $porciones[1] ){
-					$resultados = "$marcador[0] $marcador[1]";
-					
-				} 
+				// comparamos si la ventaja es mayor
+				if($marcador[4] > $ganador[1]){
+					$ganador = [$marcador[3], $marcador[4]];
+				}
 			}
-			
 		}
 		if ($errorFichero == '') {		   
 			//le informamos que será un archivo txt
@@ -78,7 +96,7 @@
 			header('Content-Disposition: attachment; filename="resultado.txt"');
 		
 			//generamos el contenido del archivo
-			echo $resultados;
+			echo $ganador;
 
 		 } else {
 			echo'<script type="text/javascript">
