@@ -96,7 +96,7 @@
 			header('Content-Disposition: attachment; filename="resultado.txt"');
 		
 			//generamos el contenido del archivo
-			echo $ganador;
+			echo "$ganador[0]  $ganador[1]" ;
 
 		 } else {
 			echo'<script type="text/javascript">
